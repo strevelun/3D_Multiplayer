@@ -24,6 +24,12 @@ class PacketHandler
 		ServerSession serverSession = session as ServerSession;
 	}
 
+	public static void S_MonsterListHandler(PacketSession session, IPacket packet)
+	{
+		S_PlayerList pkt = packet as S_PlayerList;
+		ServerSession serverSession = session as ServerSession;
+	}
+
 	public static void S_BroadcastMoveHandler(PacketSession session, IPacket packet)
 	{
 		S_BroadcastMove pkt = packet as S_BroadcastMove;

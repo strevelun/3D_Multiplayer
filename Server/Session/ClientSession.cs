@@ -6,22 +6,33 @@ using System.Threading;
 using System.Threading.Tasks;
 using ServerCore;
 using System.Net;
+using Server.Object;
 
 namespace Server
 {
-	class ClientSession : PacketSession
+	public class ClientSession : PacketSession
 	{
 		public int SessionId { get; set; }
 		public GameRoom Room { get; set; }
-		public float PosX { get; set; }
-		public float PosY { get; set; }
-		public float PosZ { get; set; }
+		public Player MyPlayer { get; set; }
 
 		public override void OnConnected(EndPoint endPoint)
 		{
 			Console.WriteLine($"OnConnected(Server::ClientSession) : {endPoint}");
 
-			Program.Room.Push(() => Program.Room.Enter(this));
+			MyPlayer = new Player();
+			MyPlayer.Id = ObjectManager.Instance.GenerateId(MyPlayer.ObjectType);
+			MyPlayer.Session = this;
+			MyPlayer.PosX = 0;
+			MyPlayer.PosY = 0;
+			MyPlayer.PosZ = 0;
+
+
+
+			Program.Room.Push(() =>
+			{
+				Program.Room.Enter(MyPlayer);
+			});
 		}
 
 		public override void OnRecvPacket(ArraySegment<byte> buffer)
@@ -35,7 +46,7 @@ namespace Server
 			if (Room != null)
 			{
 				GameRoom room = Room;
-				room.Push(() => room.Leave(this));
+				room.Push(() => room.Leave(MyPlayer));
 				Room = null;
 			}
 

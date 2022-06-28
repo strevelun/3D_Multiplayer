@@ -31,12 +31,15 @@ namespace Server
 			_listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
 			Console.WriteLine("Listening...");
 
+			Room.Init();
+
 			//FlushRoom();
 			JobTimer.Instance.Push(FlushRoom);
 
 			while (true)
 			{
 				JobTimer.Instance.Flush();
+				Room.Update();
 			}
 		}
 	}

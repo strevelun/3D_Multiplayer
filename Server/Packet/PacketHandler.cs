@@ -1,4 +1,5 @@
 ﻿using Server;
+using Server.Object;
 using ServerCore;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,15 @@ class PacketHandler
 	{
 		ClientSession clientSession = session as ClientSession;
 
-		if (clientSession.Room == null)
+		Player player = clientSession.MyPlayer;
+		if (player == null)
 			return;
 
-		GameRoom room = clientSession.Room;
-		room.Push(() => room.Leave(clientSession));
+		GameRoom room = player.Room;
+		if (room == null)
+			return;
+
+		room.Push(() => room.Leave(player));
 	}
 
 	public static void C_MoveHandler(PacketSession session, IPacket packet)
@@ -22,12 +27,14 @@ class PacketHandler
 		C_Move movePacket = packet as C_Move;
 		ClientSession clientSession = session as ClientSession;
 
-		if (clientSession.Room == null)
+		Player player = clientSession.MyPlayer;
+		if (player == null)
 			return;
 
-		//Console.WriteLine($"{movePacket.posX}, {movePacket.posY}, {movePacket.posZ}");
+		GameRoom room = player.Session.Room;
+		if (room == null)
+			return;
 
-		GameRoom room = clientSession.Room;
-		room.Push(() => room.Move(clientSession, movePacket));
+		room.Push(() => room.Move(player, movePacket));
 	}
 }

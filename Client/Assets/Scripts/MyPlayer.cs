@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MyPlayer : Player
+public class MyPlayer : GameObject
 {
 	private Camera camera;
 	private Vector3 dest;
@@ -15,7 +15,7 @@ public class MyPlayer : Player
 	void Start()
     {
 		StartCoroutine("CoSendPacket");
-		_network = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+        _network = UnityEngine.GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
 		gameObject.GetComponent<CapsuleCollider>().isTrigger = true;
 
 		PosX = PosY = PosZ = 0.0f;
@@ -24,22 +24,8 @@ public class MyPlayer : Player
 
     void Update()
     {
-		Check();
 		GetDirInput();
 	}
-
-	void Check()
-    {
-		RaycastHit hit;
-		Debug.DrawRay(transform.position, transform.forward, Color.red);
-		if (Physics.Raycast(transform.position, transform.forward, out hit, 1))
-		{
-			Flag = true;
-			Debug.Log("HIT");
-		}
-		else
-			Flag = false;
-    }
 
 	void GetDirInput()
 	{
@@ -57,7 +43,7 @@ public class MyPlayer : Player
 		Move();
 	}
 
-	private void Move()
+    private void Move()
 	{
 		if (isMove)
 		{
@@ -71,10 +57,10 @@ public class MyPlayer : Player
 			PosX += (dir.normalized * delta * _speed).x;
 			PosZ += (dir.normalized * delta * _speed).z;
 			transform.position = new Vector3(PosX, PosY, PosZ);
-			Quaternion dr = Quaternion.LookRotation(dest - transform.position.normalized);
+			Quaternion dr = Quaternion.LookRotation(dir);
 			dr.x = 0;
 			dr.z = 0;
-			transform.rotation = Quaternion.Slerp(transform.rotation, dr, 10.0f * Time.deltaTime);
+			transform.rotation = dr;
 
 		}
 	}
@@ -90,7 +76,7 @@ public class MyPlayer : Player
 			p.posX = PosX;
 			p.posY = PosY;
 			p.posZ = PosZ;
-			//p.flag = Flag;
+			p.deltaTime = Time.deltaTime;
 			_network.Send(p.Write());
 			
 		}

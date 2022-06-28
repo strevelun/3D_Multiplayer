@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class GameObject : MonoBehaviour
 {
-    public int PlayerId { get; set; }
+    public int ObjectId { get; set; }
     public float PosX { get; set; }
     public float PosY { get; set; }
     public float PosZ { get; set; }
-    public bool Flag { get; set; } // true : 충돌
 
     void Start()
     {

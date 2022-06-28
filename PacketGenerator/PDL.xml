@@ -20,10 +20,19 @@
 	  <float name="posZ"/>
 	</list>
   </packet>
+  <packet name="S_MonsterList">
+	  <list name="monster">
+		  <int name="objectId"/>
+		  <float name="posX"/>
+		  <float name="posY"/>
+		  <float name="posZ"/>
+	  </list>
+  </packet>
   <packet name="C_Move">
 	<float name="posX"/>
 	<float name="posY"/>
 	<float name="posZ"/>
+	<float name="deltaTime"/>
   </packet>
   <packet name="S_BroadcastMove">
 	<int name="playerId"/>

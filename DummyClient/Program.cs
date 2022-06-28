@@ -23,21 +23,21 @@ namespace DummyClient
 			/*
 			connector.Connect(endPoint, 
 				() => { return SessionManager.Instance.Generate(); }, // new ServerSession()
-				1);
+				10);
 			*/
 
 			while (true)
 			{
 				try
 				{
-					SessionManager.Instance.SendForEach();
+					//SessionManager.Instance.SendForEach();
 				}
 				catch (Exception e)
 				{
 					Console.WriteLine(e.ToString());
 				}
 
-				Thread.Sleep(20);
+				Thread.Sleep(200);
 			}
 		}
 	}

@@ -1,26 +1,44 @@
-﻿using ServerCore;
+﻿using Server.Object;
+using ServerCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Server
 {
-	class GameRoom : IJobQueue
+	public class GameRoom : IJobQueue
 	{
-		List<ClientSession> _sessions = new List<ClientSession>();
 		JobQueue _jobQueue = new JobQueue();
 		List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
+		public List<Player> _players = new List<Player>();
+		List<Monster> _monsters = new List<Monster>();
+
+		public void Init()
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				Monster m = new Monster();
+				m.Room = this;
+				Enter(m);
+			}
+        }
 
 		public void Push(Action job)
 		{
 			_jobQueue.Push(job);
 		}
 
+		public void Update()
+        {
+			foreach (Monster m in _monsters)
+				m.Update();
+        }
+
 		public void Flush()
 		{
-			foreach (ClientSession s in _sessions)
-				s.Send(_pendingList);
-			//Console.WriteLine($"Flushed {_pendingList.Count} items");
+			foreach (Player s in _players)
+				s.Session.Send(_pendingList);
+
 			_pendingList.Clear();
 		}
 
@@ -29,60 +47,104 @@ namespace Server
 			_pendingList.Add(segment);			
 		}
 
-		public void Enter(ClientSession session)
+		public void Enter(GameObject obj)
 		{
-			// 플레이어 추가하고
-			_sessions.Add(session);
-			session.Room = this;
+			if (obj == null)
+				return;
 
-			// 신입생한테 모든 플레이어 목록 전송
-			S_PlayerList players = new S_PlayerList();
-			foreach (ClientSession s in _sessions)
-			{
-				players.players.Add(new S_PlayerList.Player()
+			if(Define.GameObjectType.Player == obj.ObjectType)
+            {
+				Player player = obj as Player;
+
+				_players.Add(player);
+				player.Session.Room = this;
+
+				// 신입생한테 모든 플레이어 목록 전송
+				S_PlayerList players = new S_PlayerList();
+				foreach (Player p in _players)
 				{
-					isSelf = (s == session),
-					playerId = s.SessionId,
-					posX = s.PosX,
-					posY = s.PosY,
-					posZ = s.PosZ,
-				});
+					ClientSession session = p.Session;
+					players.players.Add(new S_PlayerList.Player()
+					{
+						isSelf = (p.Session == player.Session),
+						playerId = p.Id,
+						posX = p.PosX,
+						posY = p.PosY,
+						posZ = p.PosZ,
+					});
+				}
+				player.Session.Send(players.Write());
+
+				S_MonsterList monsters = new S_MonsterList();
+				foreach (Monster m in _monsters)
+				{
+					monsters.monsters.Add(new S_MonsterList.Monster()
+					{
+						objectId = m.Id,
+						posX = m.PosX,
+						posY = m.PosY,
+						posZ = m.PosZ,
+					});
+				}
+				player.Session.Send(monsters.Write());
+
+				// 신입생 입장을 모두에게 알린다
+				S_BroadcastEnterGame enter = new S_BroadcastEnterGame();
+				enter.playerId = player.Id;
+				enter.posX = 0;
+				enter.posY = 0;
+				enter.posZ = 0;
+				Broadcast(enter.Write());
 			}
-			session.Send(players.Write());
+			else if(Define.GameObjectType.Monster == obj.ObjectType)
+            {
+				Monster m = obj as Monster;	
 
-			// 신입생 입장을 모두에게 알린다
-			S_BroadcastEnterGame enter = new S_BroadcastEnterGame();
-			enter.playerId = session.SessionId;
-			enter.posX = 0;
-			enter.posY = 0;
-			enter.posZ = 0;
-			Broadcast(enter.Write());
+				_monsters.Add(m);
+
+				S_BroadcastEnterGame enter = new S_BroadcastEnterGame();
+				enter.playerId = m.Id; // playerId는 objectId
+				enter.posX = m.PosX;
+				enter.posY = m.PosY;
+				enter.posZ = m.PosZ;
+				Broadcast(enter.Write());
+			}
 		}
 
-		public void Leave(ClientSession session)
+		public void Leave(GameObject obj)
 		{
-			// 플레이어 제거하고
-			_sessions.Remove(session);
+			if (obj == null)
+				return;
 
-			// 모두에게 알린다
-			S_BroadcastLeaveGame leave = new S_BroadcastLeaveGame();
-			leave.playerId = session.SessionId;
-			Broadcast(leave.Write());
+			if(obj.ObjectType == Define.GameObjectType.Player)
+            {
+				Player player = obj as Player;
+
+				_players.Remove(player);
+
+				// 모두에게 알린다
+				S_BroadcastLeaveGame leave = new S_BroadcastLeaveGame();
+				leave.playerId = player.Id;
+				Broadcast(leave.Write());
+			}
+		
 		}
 
-		public void Move(ClientSession session, C_Move packet)
+		public void Move(Player player, C_Move packet)
 		{
 			// 좌표 바꿔주고
-			session.PosX = packet.posX;
-			session.PosY = packet.posY;
-			session.PosZ = packet.posZ;
+			player.PosX = packet.posX;
+			player.PosY = packet.posY;
+			player.PosZ = packet.posZ;
+
+			GameObject.DeltaTime = packet.deltaTime;
 
 			// 모두에게 알린다
 			S_BroadcastMove move = new S_BroadcastMove();
-			move.playerId = session.SessionId;
-			move.posX = session.PosX;
-			move.posY = session.PosY;
-			move.posZ = session.PosZ;
+			move.playerId = player.Id;
+			move.posX = player.PosX;
+			move.posY = player.PosY;
+			move.posZ = player.PosZ;
 			Broadcast(move.Write());
 		}
 	}

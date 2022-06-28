@@ -1,4 +1,5 @@
-﻿using DummyClient;
+﻿using Assets.Scripts;
+using DummyClient;
 using ServerCore;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,8 @@ class PacketHandler
 		S_BroadcastEnterGame pkt = packet as S_BroadcastEnterGame;
 		ServerSession serverSession = session as ServerSession;
 
-		PlayerManager.Instance.EnterGame(pkt);
+		//PlayerManager.Instance.EnterGame(pkt);
+		ObjectManager.Instance.Enter(pkt);
 	}
 
 	public static void S_BroadcastLeaveGameHandler(PacketSession session, IPacket packet)
@@ -31,11 +33,20 @@ class PacketHandler
 		PlayerManager.Instance.Add(pkt);
 	}
 
+	public static void S_MonsterListHandler(PacketSession session, IPacket packet)
+	{
+		S_MonsterList pkt = packet as S_MonsterList;
+
+		ObjectManager.Instance.Add(pkt);
+	}
+
 	public static void S_BroadcastMoveHandler(PacketSession session, IPacket packet)
 	{
 		S_BroadcastMove pkt = packet as S_BroadcastMove;
 		ServerSession serverSession = session as ServerSession;
 
-		PlayerManager.Instance.Move(pkt);
+		//PlayerManager.Instance.Move(pkt);
+		ObjectManager.Instance.Move(pkt);
+
 	}
 }

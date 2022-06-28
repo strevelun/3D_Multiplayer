@@ -10,8 +10,9 @@ public enum PacketID
 	C_LeaveGame = 2,
 	S_BroadcastLeaveGame = 3,
 	S_PlayerList = 4,
-	C_Move = 5,
-	S_BroadcastMove = 6,
+	S_MonsterList = 5,
+	C_Move = 6,
+	S_BroadcastMove = 7,
 	
 }
 
@@ -211,12 +212,86 @@ public class S_PlayerList : IPacket
 	}
 }
 
+public class S_MonsterList : IPacket
+{
+	public class Monster
+	{
+		public int objectId;
+		public float posX;
+		public float posY;
+		public float posZ;
+	
+		public void Read(ArraySegment<byte> segment, ref ushort count)
+		{
+			this.objectId = BitConverter.ToInt32(segment.Array, segment.Offset + count);
+			count += sizeof(int);
+			this.posX = BitConverter.ToSingle(segment.Array, segment.Offset + count);
+			count += sizeof(float);
+			this.posY = BitConverter.ToSingle(segment.Array, segment.Offset + count);
+			count += sizeof(float);
+			this.posZ = BitConverter.ToSingle(segment.Array, segment.Offset + count);
+			count += sizeof(float);
+		}
+	
+		public bool Write(ArraySegment<byte> segment, ref ushort count)
+		{
+			bool success = true;
+			Array.Copy(BitConverter.GetBytes(this.objectId), 0, segment.Array, segment.Offset + count, sizeof(int));
+			count += sizeof(int);
+			Array.Copy(BitConverter.GetBytes(this.posX), 0, segment.Array, segment.Offset + count, sizeof(float));
+			count += sizeof(float);
+			Array.Copy(BitConverter.GetBytes(this.posY), 0, segment.Array, segment.Offset + count, sizeof(float));
+			count += sizeof(float);
+			Array.Copy(BitConverter.GetBytes(this.posZ), 0, segment.Array, segment.Offset + count, sizeof(float));
+			count += sizeof(float);
+			return success;
+		}	
+	}
+	public List<Monster> monsters = new List<Monster>();
+
+	public ushort Protocol { get { return (ushort)PacketID.S_MonsterList; } }
+
+	public void Read(ArraySegment<byte> segment)
+	{
+		ushort count = 0;
+		count += sizeof(ushort);
+		count += sizeof(ushort);
+		this.monsters.Clear();
+		ushort monsterLen = BitConverter.ToUInt16(segment.Array, segment.Offset + count);
+		count += sizeof(ushort);
+		for (int i = 0; i < monsterLen; i++)
+		{
+			Monster monster = new Monster();
+			monster.Read(segment, ref count);
+			monsters.Add(monster);
+		}
+	}
+
+	public ArraySegment<byte> Write()
+	{
+		ArraySegment<byte> segment = SendBufferHelper.Open(4096);
+		ushort count = 0;
+
+		count += sizeof(ushort);
+		Array.Copy(BitConverter.GetBytes((ushort)PacketID.S_MonsterList), 0, segment.Array, segment.Offset + count, sizeof(ushort));
+		count += sizeof(ushort);
+		Array.Copy(BitConverter.GetBytes((ushort)this.monsters.Count), 0, segment.Array, segment.Offset + count, sizeof(ushort));
+		count += sizeof(ushort);
+		foreach (Monster monster in this.monsters)
+			monster.Write(segment, ref count);
+
+		Array.Copy(BitConverter.GetBytes(count), 0, segment.Array, segment.Offset, sizeof(ushort));
+
+		return SendBufferHelper.Close(count);
+	}
+}
+
 public class C_Move : IPacket
 {
 	public float posX;
 	public float posY;
 	public float posZ;
-	public bool flag;
+	public float deltaTime;
 
 	public ushort Protocol { get { return (ushort)PacketID.C_Move; } }
 
@@ -231,8 +306,8 @@ public class C_Move : IPacket
 		count += sizeof(float);
 		this.posZ = BitConverter.ToSingle(segment.Array, segment.Offset + count);
 		count += sizeof(float);
-		this.flag = BitConverter.ToBoolean(segment.Array, segment.Offset + count);
-		count += sizeof(bool);
+		this.deltaTime = BitConverter.ToSingle(segment.Array, segment.Offset + count);
+		count += sizeof(float);
 	}
 
 	public ArraySegment<byte> Write()
@@ -249,8 +324,8 @@ public class C_Move : IPacket
 		count += sizeof(float);
 		Array.Copy(BitConverter.GetBytes(this.posZ), 0, segment.Array, segment.Offset + count, sizeof(float));
 		count += sizeof(float);
-		Array.Copy(BitConverter.GetBytes(this.flag), 0, segment.Array, segment.Offset + count, sizeof(bool));
-		count += sizeof(bool);
+		Array.Copy(BitConverter.GetBytes(this.deltaTime), 0, segment.Array, segment.Offset + count, sizeof(float));
+		count += sizeof(float);
 
 		Array.Copy(BitConverter.GetBytes(count), 0, segment.Array, segment.Offset, sizeof(ushort));
 
