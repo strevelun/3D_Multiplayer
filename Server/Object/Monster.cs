@@ -78,7 +78,7 @@ namespace Server.Object
             int moveTick = (int)(1000 / _speed);
             _nextMoveTick = Environment.TickCount64 + moveTick;
 
-            FindClosest();
+            Room.Push(FindClosest);
 
             if (Vector3.Distance(new Vector3(PosX, PosY, PosZ), new Vector3(_target.PosX, _target.PosY, _target.PosZ)) <= 0.1f)
             {
@@ -95,7 +95,7 @@ namespace Server.Object
             move.posX = PosX;
             move.posY = PosY;
             move.posZ = PosZ;
-            Room.Broadcast(move.Write());
+            Room.Push(() => Room.Broadcast(move.Write()));
         }
     }
 }
