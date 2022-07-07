@@ -73,9 +73,10 @@ namespace Server.Object
                 return;
             }
 
+            // 리턴되는 동안에 온 이동 패킷은 무시해야
             if (_nextMoveTick > Environment.TickCount64)
                 return;
-            int moveTick = (int)(1000 / _speed);
+            int moveTick = (int)(1000 / _speed / 2); // 40
             _nextMoveTick = Environment.TickCount64 + moveTick;
 
             Room.Push(FindClosest);
@@ -87,8 +88,8 @@ namespace Server.Object
             }
 
             var dir = new Vector3(_target.PosX, _target.PosY, _target.PosZ) - new Vector3(PosX, PosY, PosZ);
-            PosX += (dir.Normalize() * GameObject.DeltaTime * _speed).x;
-            PosZ += (dir.Normalize() * GameObject.DeltaTime * _speed).z;
+            PosX += (dir.Normalize() * _speed * 0.01f).x;
+            PosZ += (dir.Normalize() * _speed * 0.01f).z;
 
             S_BroadcastMove move = new S_BroadcastMove();
             move.playerId = Id;

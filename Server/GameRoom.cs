@@ -15,7 +15,7 @@ namespace Server
 
 		public void Init()
 		{
-			for (int i = 0; i < 1000; i++)
+			for (int i = 0; i < 1; i++)
 			{
 				Monster m = new Monster();
 				m.Room = this;
@@ -136,8 +136,6 @@ namespace Server
 			player.PosX = packet.posX;
 			player.PosY = packet.posY;
 			player.PosZ = packet.posZ;
-
-			GameObject.DeltaTime = packet.deltaTime;
 
 			// 모두에게 알린다
 			S_BroadcastMove move = new S_BroadcastMove();

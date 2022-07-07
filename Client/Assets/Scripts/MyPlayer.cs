@@ -76,7 +76,7 @@ public class MyPlayer : GameObject
 			p.posX = PosX;
 			p.posY = PosY;
 			p.posZ = PosZ;
-			p.deltaTime = Time.deltaTime;
+			//p.deltaTime = Time.deltaTime;
 			_network.Send(p.Write());
 			
 		}

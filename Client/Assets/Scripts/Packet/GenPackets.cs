@@ -291,7 +291,6 @@ public class C_Move : IPacket
 	public float posX;
 	public float posY;
 	public float posZ;
-	public float deltaTime;
 
 	public ushort Protocol { get { return (ushort)PacketID.C_Move; } }
 
@@ -305,8 +304,6 @@ public class C_Move : IPacket
 		this.posY = BitConverter.ToSingle(segment.Array, segment.Offset + count);
 		count += sizeof(float);
 		this.posZ = BitConverter.ToSingle(segment.Array, segment.Offset + count);
-		count += sizeof(float);
-		this.deltaTime = BitConverter.ToSingle(segment.Array, segment.Offset + count);
 		count += sizeof(float);
 	}
 
@@ -323,8 +320,6 @@ public class C_Move : IPacket
 		Array.Copy(BitConverter.GetBytes(this.posY), 0, segment.Array, segment.Offset + count, sizeof(float));
 		count += sizeof(float);
 		Array.Copy(BitConverter.GetBytes(this.posZ), 0, segment.Array, segment.Offset + count, sizeof(float));
-		count += sizeof(float);
-		Array.Copy(BitConverter.GetBytes(this.deltaTime), 0, segment.Array, segment.Offset + count, sizeof(float));
 		count += sizeof(float);
 
 		Array.Copy(BitConverter.GetBytes(count), 0, segment.Array, segment.Offset, sizeof(ushort));

@@ -13,7 +13,4 @@ namespace Server.Object
             ObjectType = Define.GameObjectType.Player;
         }
     }
-
-
-
 }

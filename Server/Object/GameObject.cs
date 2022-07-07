@@ -66,11 +66,6 @@ namespace Server.Object
 
         public GameRoom Room { get; set; }
 
-        public static float DeltaTime
-        {
-            get; set;
-        }
-
         public Define.CreatureState State
         {
             get;

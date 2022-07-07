@@ -32,7 +32,6 @@
 	<float name="posX"/>
 	<float name="posY"/>
 	<float name="posZ"/>
-	<float name="deltaTime"/>
   </packet>
   <packet name="S_BroadcastMove">
 	<int name="playerId"/>
