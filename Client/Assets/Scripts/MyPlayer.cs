@@ -18,7 +18,10 @@ public class MyPlayer : GameObject
         _network = UnityEngine.GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
 		gameObject.GetComponent<CapsuleCollider>().isTrigger = true;
 
-		PosX = PosY = PosZ = 0.0f;
+		//PosX = PosY = PosZ = 0.0f;
+		PosX = -30.0f;
+		PosY = 0.0f;
+		PosZ = -30.0f;
 		camera = Camera.main;
 	}
 

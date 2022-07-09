@@ -10,14 +10,23 @@ namespace Server.Object
         Player _target = null; // 타겟이 있을때만 움직임
         long _nextMoveTick = 0;
 
-        public float _speed = 25.0f;
+        public float _speed = 10.0f;
 
-        public Monster()
+        public Monster(bool randomPos = false)
         {
             ObjectType = Define.GameObjectType.Monster;
-            PosX = _rand.Next(-20, 20);
-            PosY = 0;
-            PosZ = _rand.Next(-20, 20);
+            if(!randomPos)
+            {
+                PosX = -44;
+                PosY = 0;
+                PosZ = -47;
+            }
+            else
+            {
+                PosX = _rand.Next(-50, 0);
+                PosY = 0;
+                PosZ = _rand.Next(-50, 0);
+            }
 
             Id = ObjectManager.Instance.GenerateId(ObjectType);
 
@@ -42,7 +51,10 @@ namespace Server.Object
             if (Room._players.Count == 0)
                 return;
 
-            Room.Push(FindClosest);
+            FindClosest();
+
+            if (_target == null)
+                return;
            
             State = Define.CreatureState.Moving;
         }
@@ -57,7 +69,7 @@ namespace Server.Object
                 target = p;
                 var dist = Vector3.Distance(new Vector3(PosX, PosY, PosZ), new Vector3(target.PosX, target.PosY, target.PosZ));
 
-                if (dist < min && dist < 10.0f)
+                if (dist < min && dist < 20.0f)
                 {
                     min = dist;
                     _target = target;
@@ -73,26 +85,46 @@ namespace Server.Object
                 return;
             }
 
-            // 리턴되는 동안에 온 이동 패킷은 무시해야
-            if (_nextMoveTick > Environment.TickCount64)
-                return;
-            int moveTick = (int)(1000 / _speed / 2); // 40
-            _nextMoveTick = Environment.TickCount64 + moveTick;
-
-            Room.Push(FindClosest);
-
             if (Vector3.Distance(new Vector3(PosX, PosY, PosZ), new Vector3(_target.PosX, _target.PosY, _target.PosZ)) <= 0.1f)
             {
                 State = Define.CreatureState.Idle;
+                _target = null;
                 return;
             }
 
-            var dir = new Vector3(_target.PosX, _target.PosY, _target.PosZ) - new Vector3(PosX, PosY, PosZ);
-            PosX += (dir.Normalize() * _speed * 0.01f).x;
-            PosZ += (dir.Normalize() * _speed * 0.01f).z;
+            if (_nextMoveTick > Environment.TickCount64)
+                return;
+            int moveTick = (int)(1000 / _speed);
+            _nextMoveTick = Environment.TickCount64 + moveTick;
 
+            List<Vector2Int> path = Room.Map.FindPath(new Vector2Int(PosX, PosZ), new Vector2Int(_target.PosX, _target.PosZ), checkObjects: true);
+            if (path.Count < 2 || path.Count > 30) // _chaseCellDist
+            {
+                _target = null;
+                State = Define.CreatureState.Idle;
+                //BroadcastMove();
+                return;
+            }
+
+
+
+            //var dir = new Vector3(path[1].x, 0, path[1].y) - new Vector3(PosX, 0, PosZ);
+            //PosX += (dir.Normalize() * _speed * 0.01f).x;
+            //PosZ += (dir.Normalize() * _speed * 0.01f).z;
+
+            if(Room.Map.CanGo(new Vector2Int(path[1].x, path[1].y)))
+            {
+                PosX = path[1].x * _speed * 0.1f;
+                PosZ = path[1].y * _speed * 0.1f;
+                BroadcastMove();
+            }
+
+        }
+
+        void BroadcastMove()
+        {
             S_BroadcastMove move = new S_BroadcastMove();
-            move.playerId = Id;
+            move.playerId = Id; // objectId
             move.posX = PosX;
             move.posY = PosY;
             move.posZ = PosZ;

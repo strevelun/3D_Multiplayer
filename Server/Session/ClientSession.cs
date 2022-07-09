@@ -23,11 +23,9 @@ namespace Server
 			MyPlayer = new Player();
 			MyPlayer.Id = ObjectManager.Instance.GenerateId(MyPlayer.ObjectType);
 			MyPlayer.Session = this;
-			MyPlayer.PosX = 0;
+			MyPlayer.PosX = -30;
 			MyPlayer.PosY = 0;
-			MyPlayer.PosZ = 0;
-
-
+			MyPlayer.PosZ = -30;
 
 			Program.Room.Push(() =>
 			{

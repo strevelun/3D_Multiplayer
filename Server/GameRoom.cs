@@ -13,11 +13,20 @@ namespace Server
 		public List<Player> _players = new List<Player>();
 		List<Monster> _monsters = new List<Monster>();
 
+		public Map Map { get; private set; } = new Map();
+
 		public void Init()
 		{
-			for (int i = 0; i < 1; i++)
-			{
+			Map.LoadMap();
+			{ 
 				Monster m = new Monster();
+				m.Room = this;
+				Enter(m);
+            }
+
+			for (int i = 0; i < 100; i++)
+			{
+				Monster m = new Monster(true);
 				m.Room = this;
 				Enter(m);
 			}
@@ -91,9 +100,9 @@ namespace Server
 				// 신입생 입장을 모두에게 알린다
 				S_BroadcastEnterGame enter = new S_BroadcastEnterGame();
 				enter.playerId = player.Id;
-				enter.posX = 0;
-				enter.posY = 0;
-				enter.posZ = 0;
+				enter.posX = player.PosX;
+				enter.posY = player.PosY;
+				enter.posZ = player.PosZ;
 				Broadcast(enter.Write());
 			}
 			else if(Define.GameObjectType.Monster == obj.ObjectType)
